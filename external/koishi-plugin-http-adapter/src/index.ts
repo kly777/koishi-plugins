@@ -126,22 +126,24 @@ export function apply(ctx: Context, config: Config) {
         return
       }
 
-      // POST /route — 路由检测
+      // POST /route — AI 路由检测（同 guard 逻辑）
       if (req.method === 'POST' && path === '/route') {
         const body = await parseBody(req)
         const { text } = body
         if (!text) { json(res, 400, { error: '缺少 text' }); return }
 
-        const cleanText = text.replace(/<[^>]+>/g, '').replace(/@\S+/g, '').trim() || text
-        const MC_KW = ['mc','minecraft','我的世界','合成','配方','生物','方块','物品','武器','工具','附魔','红石','建筑','mod','模组','种子','地形','群系','村民','交易','成就','进度','铜','铁','金','钻','下界','末地','鞘翅']
-        const lower = cleanText.toLowerCase()
-        const mcHit = MC_KW.some(k => lower.includes(k))
-        const isQ = /(怎么|如何|什么|多少|能不能|在哪|什么是|有哪些|怎么用|做什么|如何做)/.test(cleanText)
+        const prompt = `你是一个指令路由分析器。根据用户消息判断是否应调用某个指令。
+可用指令：/q - MC问题解答, /status - 服务器状态, /listserver - 列表服务器, /addserver - 添加服务器, /removeserver - 删除服务器
+规则：如果用户意图匹配某个指令返回 CMD:指令名 参数，否则返回 NONE
+用户: "${text}"`
 
-        if (mcHit || isQ) {
-          json(res, 200, { routed: true, to: '/q', args: cleanText, reason: mcHit ? 'MC关键词' : '疑问词' })
+        const result = await ctx.ai.chat({ user: prompt, temperature: 0.1, max_tokens: 50 })
+        const match = result.match(/^CMD:(\S+)\s*(.*)$/i)
+
+        if (match) {
+          json(res, 200, { routed: true, to: match[1].toLowerCase(), args: match[2]?.trim() || text })
         } else {
-          json(res, 200, { routed: false, reason: '未匹配' })
+          json(res, 200, { routed: false, reason: result })
         }
         return
       }

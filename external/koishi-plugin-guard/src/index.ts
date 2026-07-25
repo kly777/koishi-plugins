@@ -49,29 +49,23 @@ export const Config: Schema<Config> = Schema.object({
     .default(true)
     .description('启用智能指令路由'),
   routePrompt: Schema.string()
-    .default(`你是一个激进的指令分析器。用户的每条消息，优先判断是否能通过已有指令来满足。
+    .default(`你是一个指令路由分析器。根据用户消息判断是否应调用某个指令来回答。
 
-可用的指令：
+可用指令：
 {commands}
 
-分析规则：
-1. 如果用户的问题可以用某个指令解答 → 返回 CMD:指令名 参数
-2. 涉及Minecraft的问题 → 优先路由到 CMD:q（如配方、合成、生物、方块、机制等）
-3. 涉及服务器状态/查询 → 优先路由到 CMD:status
-4. 只有确定无关时才回复: NONE
+规则：
+- 如果用户意图匹配某个指令 → 返回 CMD:指令名 参数
+- 否则返回 NONE
+- 仅当指令能完整回答时再路由
 
 示例：
-用户: "MC里铜有什么用"
-回复: CMD:q 铜有什么用
-
-用户: "怎么造避雷针"
-回复: CMD:q 怎么造避雷针
-
-用户: "服务器在线吗"
-回复: CMD:status
-
-用户: "今天天气真好"
-回复: NONE`)
+用户: "铜有什么用" → CMD:q 铜有什么用
+用户: "服务器状态" → CMD:status
+用户: "列表服务器" → CMD:listserver
+用户: "添加服务器 我的世界 mc.example.com" → CMD:addserver 我的世界 mc.example.com
+用户: "今天天气真好" → NONE
+用户: "有哪些服务器可以玩" → CMD:listserver`)
     .description('指令路由提示词'),
   whitelistUsers: Schema.array(Schema.string())
     .default([])
@@ -126,51 +120,30 @@ export function apply(ctx: Context, config: Config) {
     }
   }
 
-  // 关键词兜底：MC 相关关键词 → 路由到 /q
-  const MC_KEYWORDS = [
-    'mc', 'minecraft', '我的世界', '合成', '配方', '生物', '方块',
-    '物品', '武器', '工具', '附魔', '红石', '建筑', 'mod', '模组',
-    '种子', '地形', '群系', '村民', '交易', '成就', '进度',
-    '铜', '铁', '金', '钻', '下界', '末地', '鞘翅',
-  ]
-
-  function matchMCKeyword(text: string): boolean {
-    const lower = text.toLowerCase()
-    return MC_KEYWORDS.some(kw => lower.includes(kw))
-  }
-
-  // ======== 指令路由 ========
+  // ======== AI 指令路由 ========
   async function detectCommand(
     session: Session,
     text: string,
   ): Promise<{ command: string; args: string } | null> {
-    // 关键词兜底（不依赖 AI，快速判断）
-    const mcHit = matchMCKeyword(text)
-    const isQuestion = /(怎么|如何|什么|多少|能不能|在哪|什么是|有哪些|怎么用|做什么|如何做)/.test(text)
-
-    if (mcHit || isQuestion) {
-      logger.info(`[关键词命中] mc=${mcHit} question=${isQuestion} → /q ${text.substring(0, 60)}`)
-      return { command: 'q', args: text }
-    }
-
-    // AI 判断（兜底，慢路径）
     try {
       const commandsHelp = getCommandsHelp()
-      logger.info(`[AI路由] 可用指令数: ${commandsHelp.split('\n').length}`)
-
       const prompt = config.routePrompt.replace('{commands}', commandsHelp)
+
       const result = await ctx.ai.chat({
         system: prompt,
         user: text,
-        temperature: 0.2,
+        temperature: 0.1,
         max_tokens: 100,
       })
 
-      logger.info(`[AI路由] 用户="${text.substring(0, 50)}" → AI回复="${result}"`)
+      logger.info(`[AI路由] "${text.substring(0, 60)}" → ${result}`)
 
       const match = result.match(/^CMD:(\S+)\s*(.*)$/i)
       if (match) {
-        return { command: match[1].toLowerCase(), args: match[2].trim() }
+        const cmdName = match[1].toLowerCase()
+        const args = match[2].trim()
+        logger.info(`[路由] 匹配指令 /${cmdName} ${args}`)
+        return { command: cmdName, args: args || text }
       }
 
       return null
