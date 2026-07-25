@@ -5,10 +5,13 @@
   "scripts": {
     "dev": "koishi start",
     "build": "koishi build",
-    "build:mcserver": "cd external/koishi-plugin-mcserver && npm run build",
-    "build:mcqa": "cd external/koishi-plugin-mcqa && npm run build",
-    "sync": "bash scripts/sync.sh",
-    "sync:all": "bash scripts/sync.sh all --restart"
+    "deploy": "bash scripts/sync.sh all --restart",
+    "deploy:mcserver": "bash scripts/sync.sh mcserver --restart",
+    "deploy:mcqa": "bash scripts/sync.sh mcqa --restart",
+    "deploy:ai": "bash scripts/sync.sh ai --restart",
+    "deploy:ai-provider": "bash scripts/sync.sh ai-provider --restart",
+    "deploy:guard": "bash scripts/sync.sh guard --restart",
+    "watch": "node scripts/watch.js"
   },
   "workspaces": [
     "external/*"
