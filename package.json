@@ -11,27 +11,34 @@
     "deploy:ai": "bash scripts/sync.sh ai --restart",
     "deploy:ai-provider": "bash scripts/sync.sh ai-provider --restart",
     "deploy:guard": "bash scripts/sync.sh guard --restart",
-    "watch": "node scripts/watch.js"
+    "watch": "node scripts/watch.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "workspaces": [
     "external/*"
   ],
   "dependencies": {
-    "koishi": "^4.18.11",
+    "@koishijs/cli": "^4.10.10",
     "@koishijs/plugin-console": "^5.30.11",
-    "@koishijs/plugin-server": "^3.2.9",
-    "@koishijs/plugin-server-satori": "^2.9.1",
     "@koishijs/plugin-database-sqlite": "^4.7.0",
     "@koishijs/plugin-help": "^2.4.6",
+    "@koishijs/plugin-insight": "^3.5.2",
     "@koishijs/plugin-logger": "^2.6.9",
     "@koishijs/plugin-market": "^2.11.11",
-    "@koishijs/plugin-insight": "^3.5.2",
     "@koishijs/plugin-sandbox": "^3.4.2",
-    "@koishijs/cli": "^4.10.10",
-    "koishi-plugin-mcserver": "*",
-    "koishi-plugin-mcqa": "*",
+    "@koishijs/plugin-server": "^3.2.9",
+    "@koishijs/plugin-server-satori": "^2.9.1",
+    "koishi": "^4.18.11",
     "koishi-plugin-ai-auto-reply": "*",
     "koishi-plugin-ai-provider": "*",
-    "koishi-plugin-guard": "*"
+    "koishi-plugin-guard": "*",
+    "koishi-plugin-http-adapter": "*",
+    "koishi-plugin-mcqa": "*",
+    "koishi-plugin-mcserver": "*"
+  },
+  "devDependencies": {
+    "@koishijs/test-utils": "^8.0.0-rc.1",
+    "vitest": "^4.1.10"
   }
 }

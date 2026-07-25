@@ -43,29 +43,46 @@ async function extractKeywords (ctx: Context, question: string): Promise<string[
 }
 
 export function apply (ctx: Context) {
+  const log = ctx.logger('mcqa')
+
   ctx.command('q <question:text>', 'Minecraft问题解答')
     .action(async ({ session }, question) => {
+      const startTime = Date.now()
+      const userId = session?.author?.id || session?.userId || '?'
+      const ch = session?.channelId || '?'
+
       if (!question) return '请输入问题'
+
+      log.info(`[/q invoked] user=${userId} ch=${ch} question="${question.substring(0, 80)}"`)
 
       try {
         // 1. AI 提取关键词
+        const t0 = Date.now()
         const keywords = await extractKeywords(ctx, question)
+        const t1 = Date.now()
         keywords.push('')
-        ctx.logger('mcqa').info(`关键词: ${keywords.join(', ')}`)
+        log.info(`[关键词] ${keywords.filter(Boolean).join(', ')} (${(t1 - t0) / 1000}s)`)
 
         // 2. 抓取 Wiki 内容
         let wikiContexts = ''
         try {
+          const t2 = Date.now()
           const wikiResults = await Promise.all(
             keywords.map(keyword => fetchwiki(ctx, keyword))
           )
+          const t3 = Date.now()
           for (let i = 0; i < keywords.length; i++) {
-            const kw = `[${keywords[i]}]: ${wikiResults[i]}`
-            ctx.logger('mcqa').info(`Wiki: ${kw.substring(0, 80)}...`)
-            wikiContexts += `${kw}\n\n`
+            const kw = keywords[i]
+            const content = wikiResults[i]
+            if (content) {
+              log.info(`[Wiki/${kw}] ${content.substring(0, 100)}... (${(t3 - t2) / 1000}s)`)
+              wikiContexts += `[${kw}]: ${content}\n\n`
+            } else {
+              log.info(`[Wiki/${kw}] 无内容`)
+            }
           }
         } catch (e) {
-          ctx.logger('mcqa').info(`Wiki 抓取失败: ${e}`)
+          log.info(`[Wiki] 抓取失败: ${e}`)
         }
 
         // 3. AI 生成最终回答
@@ -89,12 +106,19 @@ ${wikiContexts.trim()}
 ### 问题：
 在Minecraft中，${question}`
 
-        return await ctx.ai.chat({
+        log.info(`[AI生成回答] wiki=${wikiContexts ? wikiContexts.length : 0}字符`)
+        const t4 = Date.now()
+        const answer = await ctx.ai.chat({
           system: systemPrompt,
           user: fullPrompt,
         })
+        const t5 = Date.now()
+        const truncated = answer.length > 100 ? answer.substring(0, 100) + '...' : answer
+        log.info(`[回答完成] "${truncated}" (${(t5 - t4) / 1000}s, 总计${(t5 - startTime) / 1000}s)`)
+
+        return answer
       } catch (error) {
-        ctx.logger('mcqa').error('处理失败:', error)
+        log.error(`[失败] 耗时=${(Date.now() - startTime) / 1000}s:`, error)
         return '问答服务暂时不可用，请稍后再试'
       }
     })

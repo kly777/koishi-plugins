@@ -116,6 +116,7 @@ case "$PLUGIN" in
   ai)          sync_ai ;;
   ai-provider) sync_ai_provider ;;
   guard)       sync_guard ;;
+  http-adapter) sync_http_adapter ;;
   all)
     sync_ai_provider
     sync_guard
@@ -135,3 +136,14 @@ fi
 
 echo ""
 echo "✅ 同步完成"
+
+sync_http_adapter() {
+  echo ">>> 构建 http-adapter..."
+  cd "$WORKSPACE/external/koishi-plugin-http-adapter"
+  npm run build
+  echo ">>> 同步 http-adapter..."
+  ssh $SSH_OPTS "${SERVER}" "mkdir -p ${KOISHI_BASE}/plugins/http-adapter/lib"
+  scp $SSH_OPTS lib/index.js "${SERVER}:${KOISHI_BASE}/plugins/http-adapter/lib/"
+  scp $SSH_OPTS package.json "${SERVER}:${KOISHI_BASE}/plugins/http-adapter/"
+  echo "    http-adapter ✓"
+}

@@ -1,11 +1,18 @@
-import { Context, Schema, Logger } from 'koishi'
+import { Context, Schema, Logger, Service } from 'koishi'
 import fs from 'fs'
 import path from 'path'
+
+const logger = new Logger('ai-auto-reply')
 
 export const name = 'ai-auto-reply'
 export const inject = ['ai']
 
-const logger = new Logger('ai-auto-reply')
+// 类型扩展：让其他插件可以调用 ctx.autoReply.markHandled()
+declare module 'koishi' {
+  interface Context {
+    autoReply: AutoReplyService
+  }
+}
 
 // ======== 消息记录类型 ========
 interface StoredMessage {
@@ -46,10 +53,44 @@ export const Config: Schema<Config> = Schema.object({
   maxHistory: Schema.number().default(50).description('每次检查考虑的最大消息数'),
 })
 
+// ======== 对外服务：允许其他插件（如 guard）标记消息已处理 ========
+class AutoReplyService extends Service {
+  private _markFn: ((channelId: string, userId: string, content: string) => void) | null = null
+
+  constructor(ctx: Context) {
+    super(ctx, 'autoReply')
+  }
+
+  /** 标记某条消息为已处理，避免二次 AI 判断 */
+  markHandled(channelId: string, userId: string, content: string) {
+    this._markFn?.(channelId, userId, content)
+  }
+
+  setHandler(fn: (channelId: string, userId: string, content: string) => void) {
+    this._markFn = fn
+  }
+}
+
 // ======== 插件入口 ========
 export function apply (ctx: Context, config: Config) {
   const dataFile = path.join(ctx.baseDir, 'data/ai-auto-reply-messages.json')
   let messageQueue: StoredMessage[] = []
+
+  // 注册服务
+  const service = new AutoReplyService(ctx)
+  service.setHandler((channelId, userId, content) => {
+    let count = 0
+    for (const msg of messageQueue) {
+      if (!msg.replied && msg.channelId === channelId && msg.userId === userId && msg.content === content) {
+        msg.replied = true
+        count++
+      }
+    }
+    if (count > 0) {
+      logger.info(`外部标记已处理: ${count} 条消息 (${userId})`)
+      saveMessages()
+    }
+  })
 
   function loadMessages () {
     try {
@@ -102,7 +143,6 @@ export function apply (ctx: Context, config: Config) {
     const unreplied = messageQueue.filter(m => !m.replied)
     if (unreplied.length === 0) return
 
-    // 按频道分组
     const groups = new Map<string, StoredMessage[]>()
     for (const msg of unreplied) {
       const key = `${msg.platform}:${msg.channelId}`
@@ -132,7 +172,8 @@ export function apply (ctx: Context, config: Config) {
       })
 
       if (reply && reply !== 'NO_REPLY') {
-        logger.info(`AI 决定回复: ${reply.slice(0, 80)}...`)
+        const truncated = reply.length > 120 ? reply.slice(0, 120) + '...' : reply
+        logger.info(`[回复] ch=${channelId} msgs=${msgs.length} mention=${hasMention} 内容: ${truncated}`)
 
         for (const msg of msgs) {
           msg.replied = true
@@ -142,10 +183,10 @@ export function apply (ctx: Context, config: Config) {
           const bot = ctx.bots[Object.keys(ctx.bots)[0]]
           if (bot) {
             await bot.sendMessage(channelId, reply)
-            logger.success('回复已发送')
+            logger.success(`[已发送] ch=${channelId}`)
           }
         } catch (e) {
-          logger.warn('发送回复失败:', (e as Error).message)
+          logger.warn(`[发送失败] ch=${channelId}: ${(e as Error).message}`)
         }
       } else {
         if (!hasMention && msgs.length <= 5) {
@@ -153,7 +194,7 @@ export function apply (ctx: Context, config: Config) {
             msg.replied = true
           }
         }
-        logger.info('AI 决定不回复')
+        logger.info(`[不回复] ch=${channelId} msgs=${msgs.length} mention=${hasMention}`)
       }
     } catch (e) {
       logger.warn('AI 判断失败:', (e as Error).message)
@@ -175,5 +216,5 @@ export function apply (ctx: Context, config: Config) {
     saveMessages()
   })
 
-  logger.success(`AI 自动回复插件已启动, 检查间隔: ${config.checkInterval} 秒`)
+  logger.success(`AI 自动回复已启动, 间隔=${config.checkInterval}s, 最大历史=${config.maxHistory}`)
 }

@@ -1,5 +1,5 @@
 plugins:
-  # AI 服务提供者（所有插件共享）
+  # ===== 本地开发用 =====
   ai-provider:
     provider: deepseek
     apiKey: ''
@@ -12,15 +12,22 @@ plugins:
 
   group:basic:
     help: {}
+    http: {}
     logger: {}
 
   group:console:
     console:
       open: true
     insight: {}
-    market: {}
     sandbox: {}
     mcserver: {}
+    market:
+      registry:
+        endpoint: https://registry.npmmirror.com
+        timeout: 30000
+      search:
+        endpoint: https://registry.koishi.chat/index.json
+        timeout: 30000
 
   group:server:
     server:
