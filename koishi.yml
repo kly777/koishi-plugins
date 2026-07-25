@@ -1,0 +1,33 @@
+plugins:
+  # AI 服务提供者（所有插件共享）
+  ai-provider:
+    provider: deepseek
+    apiKey: ''
+    apiBaseUrl: https://api.deepseek.com/v1
+    model: deepseek-v4-flash
+
+  group:basic:
+    help: {}
+    logger: {}
+
+  group:console:
+    console:
+      open: true
+    insight: {}
+    market: {}
+    sandbox: {}
+    mcserver: {}
+
+  group:server:
+    server:
+      port: 5140
+      maxPort: 5149
+
+  group:storage:
+    database-sqlite:
+      path: data/koishi.db
+
+  group:apps:
+    mcqa: {}
+    ai-auto-reply:
+      checkInterval: 60

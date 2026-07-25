@@ -1,0 +1,10 @@
+node_modules/
+lib/
+dist/
+*.db
+data/
+.DS_Store
+package-lock.json
+
+# 敏感配置（不提交）
+.env

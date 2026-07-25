@@ -1,0 +1,42 @@
+{
+  "name": "koishi-plugin-mcserver",
+  "description": "用于查看指定mc服务器的信息",
+  "version": "1.1.0",
+  "main": "lib/index.js",
+  "typings": "lib/index.d.ts",
+  "files": [
+    "lib",
+    "dist"
+  ],
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --format=cjs --outfile=lib/index.js --platform=node --external:koishi --external:@koishijs/* --external:@napi-rs/* --external:canvas --external:minecraft-server-util",
+    "dev": "esbuild src/index.ts --bundle --format=cjs --outfile=lib/index.js --platform=node --external:koishi --external:@koishijs/* --external:@napi-rs/* --external:canvas --external:minecraft-server-util --watch",
+    "build:types": "tsc --emitDeclarationOnly"
+  },
+  "license": "MIT",
+  "keywords": [
+    "chatbot",
+    "koishi",
+    "plugin"
+  ],
+  "peerDependencies": {
+    "koishi": "^4.18.7"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^0.1.73",
+    "canvas": "^3.1.2",
+    "minecraft-server-util": "^5.4.4"
+  },
+  "devDependencies": {
+    "@koishijs/cli": "^4.10.10",
+    "esbuild": "^0.28.1"
+  },
+  "koishi": {
+    "service": {
+      "require": [
+        "database"
+      ]
+    },
+    "hidden": false
+  }
+}

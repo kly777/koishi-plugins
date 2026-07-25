@@ -1,0 +1,33 @@
+{
+  "name": "koishi-plugin-mcqa",
+  "description": "用于回答mc相关问题",
+  "version": "1.0.6",
+  "main": "lib/index.js",
+  "typings": "lib/index.d.ts",
+  "files": [
+    "lib",
+    "dist"
+  ],
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --format=cjs --outfile=lib/index.js --platform=node --external:koishi --external:@koishijs/* --external:jsdom --external:whatwg-encoding --external:tough-cookie",
+    "dev": "esbuild src/index.ts --bundle --format=cjs --outfile=lib/index.js --platform=node --external:koishi --external:@koishijs/* --external:jsdom --external:whatwg-encoding --external:tough-cookie --watch",
+    "build:types": "tsc --emitDeclarationOnly"
+  },
+  "license": "MIT",
+  "keywords": [
+    "chatbot",
+    "koishi",
+    "plugin",
+    "minecraft"
+  ],
+  "dependencies": {
+    "jsdom": "^26.1.0"
+  },
+  "peerDependencies": {
+    "koishi": "^4.18.7"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^21.1.7",
+    "esbuild": "^0.28.1"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "koishi-plugin-ai-auto-reply",
+  "description": "自动记录群消息并用AI判断是否需要回复",
+  "version": "1.0.0",
+  "main": "lib/index.js",
+  "typings": "lib/index.d.ts",
+  "files": [
+    "lib"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "chatbot",
+    "koishi",
+    "plugin"
+  ],
+  "peerDependencies": {
+    "koishi": "^4.18.0"
+  },
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --format=cjs --outfile=lib/index.js --platform=node --external:koishi --external:@koishijs/*",
+    "dev": "esbuild src/index.ts --bundle --format=cjs --outfile=lib/index.js --platform=node --external:koishi --external:@koishijs/* --watch"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.1"
+  }
+}

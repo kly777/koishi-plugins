@@ -1,0 +1,30 @@
+{
+  "name": "koishi-plugin-ai-provider",
+  "description": "统一的 AI 对话服务提供商，支持 DeepSeek / OpenAI / 自定义",
+  "version": "1.0.0",
+  "main": "lib/index.js",
+  "typings": "lib/index.d.ts",
+  "files": [
+    "lib"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "chatbot",
+    "koishi",
+    "plugin",
+    "ai",
+    "deepseek",
+    "openai"
+  ],
+  "peerDependencies": {
+    "koishi": "^4.18.0"
+  },
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --format=cjs --outfile=lib/index.js --platform=node --external:koishi --external:@koishijs/*",
+    "dev": "esbuild src/index.ts --bundle --format=cjs --outfile=lib/index.js --platform=node --external:koishi --external:@koishijs/* --watch",
+    "build:types": "tsc --emitDeclarationOnly"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.1"
+  }
+}

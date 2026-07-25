@@ -1,0 +1,33 @@
+{
+  "name": "@kly777/koishi-dev",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "koishi start",
+    "build": "koishi build",
+    "build:mcserver": "cd external/koishi-plugin-mcserver && npm run build",
+    "build:mcqa": "cd external/koishi-plugin-mcqa && npm run build",
+    "sync": "bash scripts/sync.sh",
+    "sync:all": "bash scripts/sync.sh all --restart"
+  },
+  "workspaces": [
+    "external/*"
+  ],
+  "dependencies": {
+    "koishi": "^4.18.11",
+    "@koishijs/plugin-console": "^5.30.11",
+    "@koishijs/plugin-server": "^3.2.9",
+    "@koishijs/plugin-server-satori": "^2.9.1",
+    "@koishijs/plugin-database-sqlite": "^4.7.0",
+    "@koishijs/plugin-help": "^2.4.6",
+    "@koishijs/plugin-logger": "^2.6.9",
+    "@koishijs/plugin-market": "^2.11.11",
+    "@koishijs/plugin-insight": "^3.5.2",
+    "@koishijs/plugin-sandbox": "^3.4.2",
+    "@koishijs/cli": "^4.10.10",
+    "koishi-plugin-mcserver": "*",
+    "koishi-plugin-mcqa": "*",
+    "koishi-plugin-ai-auto-reply": "*",
+    "koishi-plugin-ai-provider": "*"
+  }
+}
