@@ -30,6 +30,7 @@ usage() {
   echo "  mcqa        构建并同步 koishi-plugin-mcqa"
   echo "  ai          同步 koishi-plugin-ai-auto-reply"
   echo "  ai-provider 构建并同步 koishi-plugin-ai-provider"
+  echo "  guard       构建并同步 koishi-plugin-guard"
   echo "  all         构建并同步所有插件"
   echo ""
   echo "选项:"
@@ -98,16 +99,30 @@ sync_ai_provider() {
   echo "    ai-provider ✓"
 }
 
+sync_guard() {
+  echo ">>> 构建 guard..."
+  cd "$WORKSPACE/external/koishi-plugin-guard"
+  npm run build
+  echo ">>> 同步 guard..."
+  ssh $SSH_OPTS "${SERVER}" "mkdir -p ${KOISHI_BASE}/plugins/guard/lib"
+  scp $SSH_OPTS lib/index.js "${SERVER}:${KOISHI_BASE}/plugins/guard/lib/"
+  scp $SSH_OPTS package.json "${SERVER}:${KOISHI_BASE}/plugins/guard/"
+  echo "    guard ✓"
+}
+
 case "$PLUGIN" in
   mcserver)    sync_mcserver ;;
   mcqa)        sync_mcqa ;;
   ai)          sync_ai ;;
   ai-provider) sync_ai_provider ;;
+  guard)       sync_guard ;;
   all)
     sync_ai_provider
+    sync_guard
     sync_mcserver
     sync_mcqa
     sync_ai
+
     ;;
   *) echo "未知插件: $PLUGIN"; usage ;;
 esac

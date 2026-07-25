@@ -28,6 +28,7 @@
     "koishi-plugin-mcserver": "*",
     "koishi-plugin-mcqa": "*",
     "koishi-plugin-ai-auto-reply": "*",
-    "koishi-plugin-ai-provider": "*"
+    "koishi-plugin-ai-provider": "*",
+    "koishi-plugin-guard": "*"
   }
 }

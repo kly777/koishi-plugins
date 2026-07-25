@@ -1,0 +1,16 @@
+{
+  "name": "koishi-plugin-guard",
+  "description": "AI 安全护栏：提示注入检测 + 智能指令路由",
+  "version": "1.0.0",
+  "main": "lib/index.js",
+  "typings": "lib/index.d.ts",
+  "files": ["lib"],
+  "license": "MIT",
+  "keywords": ["chatbot", "koishi", "plugin", "security", "guard"],
+  "peerDependencies": { "koishi": "^4.18.0" },
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --format=cjs --outfile=lib/index.js --platform=node --external:koishi --external:@koishijs/*",
+    "dev": "esbuild src/index.ts --bundle --format=cjs --outfile=lib/index.js --platform=node --external:koishi --external:@koishijs/* --watch"
+  },
+  "devDependencies": { "esbuild": "^0.28.1" }
+}
