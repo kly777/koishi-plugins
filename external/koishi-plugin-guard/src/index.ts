@@ -85,13 +85,22 @@ export function apply(ctx: Context, config: Config) {
 
   // 收集可用指令描述
   function getCommandsHelp(): string {
-    const lines: string[] = []
-    for (const [name, cmd] of ctx.commands) {
-      if (cmd.hidden || name.startsWith('plugin.')) continue
-      const desc = cmd.config?.description || ''
-      lines.push(`  /${name} ${desc}`.trimEnd())
+    try {
+      if (!ctx.commands || typeof ctx.commands[Symbol.iterator] !== 'function') {
+        throw new Error('commands not iterable')
+      }
+      const lines: string[] = []
+      for (const [name, cmd] of ctx.commands as Map<string, any>) {
+        if (cmd.hidden || name.startsWith('plugin.')) continue
+        const desc = cmd.config?.description || ''
+        lines.push(`  /${name} ${desc}`.trimEnd())
+      }
+      if (lines.length > 0) return lines.join('\n')
+    } catch (e) {
+      logger.warn(`获取指令列表失败: ${(e as Error).message}`)
     }
-    return lines.join('\n')
+    // 兜底：硬编码已知指令
+    return '/q - MC问题解答\n/status - 服务器状态\n/listserver - 列表服务器\n/addserver - 添加服务器\n/removeserver - 删除服务器\n/msgq - 消息队列'
   }
 
   // ======== 正则注入检测 ========
